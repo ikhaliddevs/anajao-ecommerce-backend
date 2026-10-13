@@ -79,7 +79,7 @@ This repository contains the backend foundation for the KAM VOGUE Anajao ecommer
 
 ## Current Milestone Status
 
-Milestone 1 implementation is scaffolded and pending final local verification, commit, push, and PR creation.
+Milestone 1 implementation is locally verified, committed, and pushed to `feature/milestone-01-backend-foundation`. Pull request creation is pending because the local shell does not have GitHub CLI installed. Use the compare URL in `docs/pull-request-milestone-01.md`.
 
 ## Instructions For Future Codex Sessions
 

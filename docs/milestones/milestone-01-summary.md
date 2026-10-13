@@ -34,7 +34,7 @@
 
 - Prisma engine download may require network access during `npm ci` or `npm run db:generate`.
 - Truehost production database version and connection limits still need plan verification before production deployment.
-- GitHub push and PR creation depend on GitHub network/authentication availability.
+- GitHub CLI is not installed in this environment, so PR creation must be completed through the GitHub compare URL or by installing/authenticating `gh`.
 
 ## Acceptance Status
 
@@ -45,4 +45,5 @@ Local Milestone 1 implementation is accepted based on executed verification:
 - Typecheck, lint, format check, unit tests, integration tests, and build passed.
 - Built server started successfully on port 3000.
 - `/api/v1/health`, `/api/v1/ready`, and `/api-docs` responded successfully.
-- GitHub push and PR creation remain pending until branch commits are pushed.
+- Branches `main`, `develop`, and `feature/milestone-01-backend-foundation` were pushed to GitHub.
+- Pull request creation is blocked locally because `gh` is not installed. Open: `https://github.com/ikhaliddevs/anajao-ecommerce-backend/compare/develop...feature/milestone-01-backend-foundation?expand=1`

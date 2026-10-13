@@ -45,3 +45,13 @@ See `docs/milestones/milestone-01-test-report.md`.
 - [ ] Confirm health/readiness behavior.
 - [ ] Confirm CI checks are required and passing.
 - [ ] Confirm docs and Postman collection are importable.
+
+## PR Creation
+
+Local branch is pushed. Open the PR with:
+
+```text
+https://github.com/ikhaliddevs/anajao-ecommerce-backend/compare/develop...feature/milestone-01-backend-foundation?expand=1
+```
+
+GitHub CLI was unavailable in the local shell (`gh` command not found), so the PR could not be opened automatically from this environment.
