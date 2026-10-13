@@ -1,0 +1,2 @@
+-- Milestone 1 baseline migration.
+-- No business tables are created in this milestone.
