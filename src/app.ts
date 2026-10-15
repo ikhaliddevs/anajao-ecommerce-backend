@@ -1,0 +1,66 @@
+import cors from "cors";
+import express, { type Express } from "express";
+import rateLimit from "express-rate-limit";
+import helmet from "helmet";
+import type { Logger as PinoLogger } from "pino";
+import { pinoHttp } from "pino-http";
+import swaggerUi from "swagger-ui-express";
+import type { AppEnv } from "./config/env.js";
+import { config } from "./config/env.js";
+import { openApiDocument } from "./config/openapi.js";
+import { createErrorHandler } from "./common/middleware/error-handler.js";
+import { notFoundHandler } from "./common/middleware/not-found.js";
+import type { Logger } from "./common/types/logger.js";
+import { PrismaDatabaseClient, type DatabaseClient } from "./database/client.js";
+import { createLogger } from "./logger.js";
+import { createApiRouter } from "./routes/index.js";
+
+export type AppDependencies = {
+  env?: AppEnv;
+  logger?: Logger;
+  database?: DatabaseClient;
+  configureRoutes?: (app: Express) => void;
+};
+
+export const createApp = (dependencies: AppDependencies = {}) => {
+  const env = dependencies.env ?? config;
+  const logger = dependencies.logger ?? createLogger(env);
+  const database = dependencies.database ?? new PrismaDatabaseClient(logger);
+  const app = express();
+
+  app.disable("x-powered-by");
+  app.use(helmet());
+  app.use(
+    cors({
+      origin: env.corsOrigins,
+      methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+      allowedHeaders: ["Content-Type", "Authorization"],
+      credentials: true
+    })
+  );
+  app.use(
+    rateLimit({
+      windowMs: env.rateLimitWindowMs,
+      limit: env.rateLimitMax,
+      standardHeaders: "draft-8",
+      legacyHeaders: false
+    })
+  );
+  app.use(express.json({ limit: "1mb" }));
+
+  if (env.nodeEnv !== "test" && isPinoLogger(logger)) {
+    app.use(pinoHttp({ logger }));
+  }
+
+  app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(openApiDocument));
+  app.use("/api/v1", createApiRouter(database));
+  dependencies.configureRoutes?.(app);
+  app.use(notFoundHandler);
+  app.use(createErrorHandler(logger));
+
+  return { app, database, logger, env };
+};
+
+const isPinoLogger = (logger: Logger): logger is PinoLogger => {
+  return typeof (logger as Partial<PinoLogger>).child === "function";
+};

@@ -1,0 +1,54 @@
+{
+  "info": {
+    "name": "Anajao Ecommerce Backend - Milestone 01",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:3000"
+    }
+  ],
+  "item": [
+    {
+      "name": "Health",
+      "request": {
+        "method": "GET",
+        "url": "{{baseUrl}}/api/v1/health"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('status is 200', function () { pm.response.to.have.status(200); });",
+              "pm.test('success response', function () { pm.expect(pm.response.json().success).to.eql(true); });",
+              "pm.test('health status ok', function () { pm.expect(pm.response.json().data.status).to.eql('ok'); });"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Readiness",
+      "request": {
+        "method": "GET",
+        "url": "{{baseUrl}}/api/v1/ready"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('status is 200 or 503', function () { pm.expect([200, 503]).to.include(pm.response.code); });",
+              "pm.test('success response envelope', function () { pm.expect(pm.response.json().success).to.eql(true); });",
+              "pm.test('readiness shape', function () { pm.expect(pm.response.json().data.services).to.have.property('database'); });"
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}
