@@ -5,6 +5,7 @@ const bootstrap = async () => {
   const { app, database, logger, env } = createApp();
 
   await database.connect();
+  logger.info("Database connected successfully");
 
   const server = createServer(app);
 

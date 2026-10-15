@@ -2,16 +2,19 @@
   "name": "anajao-ecommerce-backend",
   "version": "1.0.0",
   "description": "Backend foundation for the KAM VOGUE Anajao ecommerce platform.",
-  "main": "dist/server.js",
+  "main": "dist/src/server.js",
   "type": "module",
   "scripts": {
     "dev": "tsx watch src/server.ts",
     "build": "tsc -p tsconfig.json",
-    "start": "node dist/server.js",
+    "start": "node dist/src/server.js",
     "typecheck": "tsc --noEmit",
     "lint": "eslint .",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
+    "docs:generate": "tsx scripts/generate-postman.ts",
+    "docs:validate": "node dist/scripts/validate-api-artifacts.js",
+    "test:smoke": "node dist/scripts/smoke-built.js",
     "test": "vitest run",
     "test:unit": "vitest run --exclude \"tests/integration/**/*.test.ts\"",
     "test:integration": "vitest run tests/integration",
@@ -34,24 +37,41 @@
   "dependencies": {
     "@prisma/adapter-mariadb": "^7.10.0",
     "@prisma/client": "^7.10.0",
+    "argon2": "^0.45.1",
     "cors": "^2.8.6",
     "dotenv": "^18.0.7",
     "express": "^5.3.0",
     "express-rate-limit": "^8.7.1",
     "helmet": "^8.3.0",
+    "jose": "^6.2.12",
+    "otpauth": "^9.5.2",
     "pino": "^10.4.0",
     "pino-http": "^11.0.0",
     "swagger-ui-express": "^5.0.1",
     "yaml": "^2.9.1",
     "zod": "^4.6.7"
   },
+  "overrides": {
+    "@prisma/adapter-mariadb": {
+      "mariadb": "3.5.4"
+    },
+    "@prisma/config": {
+      "deepmerge-ts": "8.0.2"
+    },
+    "prisma": {
+      "mysql2": "3.24.6"
+    }
+  },
   "devDependencies": {
+    "@apidevtools/swagger-parser": "^13.1.0",
     "@eslint/js": "^10.0.1",
     "@types/cors": "^2.8.19",
     "@types/express": "^5.0.6",
     "@types/node": "^26.6.5",
     "@types/supertest": "^7.2.1",
     "@types/swagger-ui-express": "^4.1.8",
+    "ajv": "^8.20.0",
+    "ajv-draft-04": "^1.0.0",
     "eslint": "^10.12.0",
     "prettier": "^3.9.10",
     "prisma": "^7.10.0",

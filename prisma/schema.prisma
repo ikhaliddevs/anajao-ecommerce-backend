@@ -7,5 +7,120 @@ datasource db {
   provider = "mysql"
 }
 
-// Milestone 1 intentionally defines no business entities.
-// Future milestones will add auth, catalog, inventory, order, and marketplace models.
+enum Role {
+  CUSTOMER
+  ADMIN
+  SELLER
+}
+
+enum AccountStatus {
+  PENDING_VERIFICATION
+  ACTIVE
+  DISABLED
+  LOCKED
+}
+
+enum ChallengeKind {
+  EMAIL_VERIFICATION
+  PHONE_VERIFICATION
+  PASSWORD_RESET
+}
+
+model User {
+  id              String        @id @default(uuid()) @db.Char(36)
+  email           String        @unique @db.VarChar(254)
+  passwordHash    String        @db.VarChar(255)
+  name            String        @db.VarChar(100)
+  phone           String?       @db.VarChar(20)
+  emailVerifiedAt DateTime?
+  phoneVerifiedAt DateTime?
+  role            Role          @default(CUSTOMER)
+  status          AccountStatus @default(PENDING_VERIFICATION)
+  failedLogins    Int           @default(0)
+  lockedUntil     DateTime?
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+  sessions        Session[]
+  challenges      Challenge[]
+  addresses       Address[]
+  mfa             MfaFactor?
+  privacyRequests PrivacyRequest[]
+  auditEvents     AuditEvent[]
+}
+
+model Session {
+  id           String   @id @default(uuid()) @db.Char(36)
+  userId       String   @db.Char(36)
+  familyId     String   @db.Char(36)
+  tokenHash    String   @unique @db.Char(64)
+  mfaVerified  Boolean  @default(false)
+  expiresAt    DateTime
+  revokedAt    DateTime?
+  createdAt    DateTime @default(now())
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, revokedAt])
+  @@index([familyId])
+  @@index([expiresAt])
+}
+
+model Challenge {
+  id        String        @id @default(uuid()) @db.Char(36)
+  userId    String        @db.Char(36)
+  kind      ChallengeKind
+  tokenHash String        @unique @db.Char(64)
+  target    String        @db.VarChar(254)
+  expiresAt DateTime
+  usedAt    DateTime?
+  createdAt DateTime      @default(now())
+  user      User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, kind, usedAt])
+  @@index([expiresAt])
+}
+
+model Address {
+  id         String   @id @default(uuid()) @db.Char(36)
+  userId     String   @db.Char(36)
+  label      String   @db.VarChar(50)
+  recipient  String   @db.VarChar(100)
+  line1      String   @db.VarChar(200)
+  line2      String?  @db.VarChar(200)
+  city       String   @db.VarChar(100)
+  region     String   @db.VarChar(100)
+  postalCode String?  @db.VarChar(20)
+  country    String   @db.Char(2)
+  createdAt  DateTime @default(now())
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, createdAt])
+}
+
+model MfaFactor {
+  userId          String    @id @db.Char(36)
+  encryptedSecret String    @db.VarChar(255)
+  confirmedAt     DateTime?
+  lastUsedStep    Int        @default(-1)
+  user            User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model PrivacyRequest {
+  id        String   @id @default(uuid()) @db.Char(36)
+  userId    String   @db.Char(36)
+  kind      String   @db.VarChar(20)
+  status    String   @default("PENDING") @db.VarChar(20)
+  createdAt DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, kind, status])
+}
+
+model AuditEvent {
+  id        String   @id @default(uuid()) @db.Char(36)
+  userId    String   @db.Char(36)
+  action    String   @db.VarChar(64)
+  createdAt DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id], onDelete: Restrict)
+
+  @@index([userId, createdAt])
+}

@@ -1,9 +1,11 @@
+import { identityPaths, identitySchemas } from "../modules/identity/identity.openapi.js";
 export const openApiDocument = {
-  openapi: "3.0.3",
+  openapi: "3.1.0",
   info: {
     title: "Anajao Ecommerce Backend API",
-    version: "1.0.0",
-    description: "Milestone 1 backend foundation endpoints for KAM VOGUE Anajao ecommerce."
+    version: "2.0.0",
+    description:
+      "Identity and account foundation. Bearer access tokens; no authentication cookies. Verification and recovery delivery require an injected provider. SELLER is the vendor-ready role."
   },
   servers: [
     {
@@ -11,7 +13,12 @@ export const openApiDocument = {
       description: "Local development"
     }
   ],
+  components: {
+    securitySchemes: { bearerAuth: { type: "http", scheme: "bearer", bearerFormat: "JWT" } },
+    schemas: identitySchemas
+  },
   paths: {
+    ...identityPaths,
     "/api/v1/health": {
       get: {
         summary: "Application health",
