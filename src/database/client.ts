@@ -9,15 +9,19 @@ export type DatabaseClient = {
 };
 
 export class PrismaDatabaseClient implements DatabaseClient {
-  private readonly prisma: PrismaClient;
+  readonly prisma: PrismaClient;
 
-  constructor(private readonly logger: Logger) {
-    const adapter = new PrismaMariaDb(parseMariaDbConnection(process.env.DATABASE_URL));
+  constructor(
+    private readonly logger: Logger,
+    databaseUrl = process.env.DATABASE_URL
+  ) {
+    const adapter = new PrismaMariaDb(parseMariaDbConnection(databaseUrl));
     this.prisma = new PrismaClient({ adapter });
   }
 
   async connect(): Promise<void> {
     await this.prisma.$connect();
+    await this.prisma.$queryRaw`SELECT 1`;
   }
 
   async disconnect(): Promise<void> {
@@ -28,8 +32,8 @@ export class PrismaDatabaseClient implements DatabaseClient {
     try {
       await this.prisma.$queryRaw`SELECT 1`;
       return true;
-    } catch (error) {
-      this.logger.error({ error }, "Database readiness check failed");
+    } catch {
+      this.logger.error({}, "Database readiness check failed");
       return false;
     }
   }

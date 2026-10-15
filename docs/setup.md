@@ -41,6 +41,8 @@ This drops and recreates the schema managed by Prisma migrations. Do not run res
 
 ## API Documentation
 
+Milestone 2 also requires `AUTH_SECRET` and `MFA_ENCRYPTION_KEY`; see [identity setup and provider boundaries](identity-access.md). The example values must be replaced before startup. Integration tests now use a dedicated `TEST_DATABASE_URL` ending in `_test`, never the development database.
+
 After starting the server, open:
 
 ```text

@@ -10,7 +10,15 @@ const rawEnvSchema = z.object({
   DATABASE_URL: z.string().url().optional(),
   CORS_ORIGINS: z.string().default("http://localhost:3000,http://localhost:5173"),
   RATE_LIMIT_WINDOW_MS: z.coerce.number().int().positive().default(900000),
-  RATE_LIMIT_MAX: z.coerce.number().int().positive().default(100)
+  RATE_LIMIT_MAX: z.coerce.number().int().positive().default(100),
+  AUTH_SECRET: z.string().min(64).optional(),
+  MFA_ENCRYPTION_KEY: z
+    .string()
+    .regex(/^[a-f0-9]{64}$/i)
+    .optional(),
+  AUTH_ACCESS_TTL_SECONDS: z.coerce.number().int().min(60).max(900).default(600),
+  AUTH_REFRESH_TTL_SECONDS: z.coerce.number().int().min(3600).max(2592000).default(604800),
+  AUTH_LOGIN_LIMIT: z.coerce.number().int().positive().max(100).default(10)
 });
 
 export type AppEnv = {
@@ -21,6 +29,11 @@ export type AppEnv = {
   corsOrigins: string[];
   rateLimitWindowMs: number;
   rateLimitMax: number;
+  authSecret: string;
+  mfaEncryptionKey: string;
+  accessTtlSeconds: number;
+  refreshTtlSeconds: number;
+  loginLimit: number;
 };
 
 export class EnvValidationError extends Error {
@@ -45,16 +58,38 @@ export const loadEnv = (source: NodeJS.ProcessEnv = process.env): AppEnv => {
     throw new EnvValidationError(["DATABASE_URL: Required outside test environment"]);
   }
 
+  if (env.NODE_ENV !== "test" && (!env.AUTH_SECRET || !env.MFA_ENCRYPTION_KEY)) {
+    throw new EnvValidationError(["AUTH_SECRET and MFA_ENCRYPTION_KEY are required outside tests"]);
+  }
+  const origins = env.CORS_ORIGINS.split(",")
+    .map((origin) => origin.trim())
+    .filter(Boolean);
+  if (
+    origins.length === 0 ||
+    origins.some((origin) => {
+      try {
+        const url = new URL(origin);
+        return !["http:", "https:"].includes(url.protocol) || url.origin !== origin;
+      } catch {
+        return true;
+      }
+    })
+  )
+    throw new EnvValidationError(["CORS_ORIGINS must contain explicit HTTP(S) origins"]);
+
   return {
     nodeEnv: env.NODE_ENV,
     port: env.PORT,
     logLevel: env.LOG_LEVEL,
     databaseUrl: env.DATABASE_URL,
-    corsOrigins: env.CORS_ORIGINS.split(",")
-      .map((origin) => origin.trim())
-      .filter(Boolean),
+    corsOrigins: origins,
     rateLimitWindowMs: env.RATE_LIMIT_WINDOW_MS,
-    rateLimitMax: env.RATE_LIMIT_MAX
+    rateLimitMax: env.RATE_LIMIT_MAX,
+    authSecret: env.AUTH_SECRET ?? "test-only-secret-".repeat(5),
+    mfaEncryptionKey: env.MFA_ENCRYPTION_KEY ?? "ab".repeat(32),
+    accessTtlSeconds: env.AUTH_ACCESS_TTL_SECONDS,
+    refreshTtlSeconds: env.AUTH_REFRESH_TTL_SECONDS,
+    loginLimit: env.AUTH_LOGIN_LIMIT
   };
 };
 
