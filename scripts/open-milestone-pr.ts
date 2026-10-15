@@ -60,6 +60,12 @@ const pull =
 const verified = (await api(`/pulls/${pull.number}`)) as Pull;
 if (verified.base.ref !== "develop" || verified.merged) throw new Error("Unexpected PR state");
 console.log(`PR #${verified.number}: ${verified.html_url} (base: develop, merged: false)`);
+if (process.argv.includes("--update-body")) {
+  await api(`/pulls/${pull.number}`, "PATCH", {
+    body: readFileSync("docs/pull-request-milestone-02.md", "utf8")
+  });
+  console.log("PR description updated from the committed handoff document");
+}
 const checks = (await api(`/commits/${verified.head.sha}/check-runs`)) as {
   check_runs: { name: string; status: string; conclusion: string | null; html_url: string }[];
 };

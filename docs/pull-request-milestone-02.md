@@ -11,7 +11,7 @@ Customers can register and verify an account, sign in, rotate/revoke sessions, r
 
 ## Validation
 
-Locally executed: clean installation, Prisma generation/migration deployment, typecheck, lint, 20 unit tests, 16 isolated MariaDB integration tests, build, API artifact schema validation and five built-server smoke assertions. See [test report](milestones/milestone-02-test-report.md) for final formatting/release evidence and explicit not-run checks. No hosted CI pass is claimed until observed.
+Locally executed: clean installation, Prisma generation/migration deployment, typecheck, lint, format check, 20 unit tests, 16 isolated MariaDB integration tests, build, API artifact schema validation and five built-server smoke assertions. See [test report](https://github.com/ikhaliddevs/anajao-ecommerce-backend/blob/feature/milestone-02-identity-access/docs/milestones/milestone-02-test-report.md) for final release evidence and explicit not-run checks. No hosted CI pass is claimed until observed.
 
 ## Boundaries for review
 
@@ -32,7 +32,7 @@ Locally executed: clean installation, Prisma generation/migration deployment, ty
 
 ## PR status
 
-Submission pending. The feature branch will target develop; it must not be merged automatically.
+[PR #2](https://github.com/ikhaliddevs/anajao-ecommerce-backend/pull/2) was created and verified through the authenticated GitHub API because GitHub CLI is unavailable. Base: develop; merged: false. The `checks` job for implementation/handoff commit `05b61d6` was observed completed/success: [CI execution](https://github.com/ikhaliddevs/anajao-ecommerce-backend/actions/runs/38733224819/job/116415912594). Later handoff/tooling commits trigger their own checks. The feature branch is pushed. Wait for owner review and approval; do not merge automatically or begin Milestone 3.
 
 Fallback command if GitHub access is unavailable:
 
