@@ -18,7 +18,7 @@ const bootstrap = async () => {
     server.close((error) => {
       void (async () => {
         if (error) {
-          logger.error({ error }, "HTTP server failed to close cleanly");
+          logger.error({}, "HTTP server failed to close cleanly");
           process.exitCode = 1;
         }
 
@@ -36,7 +36,8 @@ const bootstrap = async () => {
   });
 };
 
-bootstrap().catch((error) => {
-  console.error("Failed to start Anajao backend", error);
+bootstrap().catch(() => {
+  // Driver startup exceptions can contain connection details or credentials.
+  console.error("Failed to start Anajao backend; check environment and database availability");
   process.exit(1);
 });
