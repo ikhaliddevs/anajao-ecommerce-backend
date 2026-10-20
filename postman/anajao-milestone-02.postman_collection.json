@@ -1,0 +1,2708 @@
+{
+  "info": {
+    "name": "Anajao Milestone 2 — Identity and Access",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "description": "Select requests using docs/identity-access.md walkthrough. Delivery and administrator fixtures require setup; this is not a sequential run-all collection. Responses are illustrative."
+  },
+  "item": [
+    {
+      "name": "Identity and account",
+      "item": [
+        {
+          "name": "POST /auth/register",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/auth/register",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "auth", "register"]
+            },
+            "description": "Register a pending customer; same response for duplicate email. Use resend-verification to request delivery.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"{{email}}\",\n  \"name\": \"Example Customer\",\n  \"password\": \"{{password}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Expected status', () => pm.response.to.have.status(202));",
+                  "const body = pm.response.json();",
+                  "pm.test('Response envelope', () => pm.expect(body.success).to.eql(true));",
+                  "pm.test('No credential fields', () => pm.expect(pm.response.text()).not.to.match(/passwordHash|tokenHash|encryptedSecret/));"
+                ]
+              }
+            }
+          ],
+          "response": [
+            {
+              "name": "Illustrative response (not an execution record)",
+              "originalRequest": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/api/v1/auth/register",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["api", "v1", "auth", "register"]
+                },
+                "description": "Register a pending customer; same response for duplicate email. Use resend-verification to request delivery.",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"email\": \"{{email}}\",\n  \"name\": \"Example Customer\",\n  \"password\": \"{{password}}\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "status": "Accepted",
+              "code": 202,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                },
+                {
+                  "key": "Cache-Control",
+                  "value": "no-store"
+                }
+              ],
+              "body": "{\n  \"success\": true,\n  \"data\": {\n    \"message\": \"Request completed\"\n  }\n}"
+            },
+            {
+              "name": "Illustrative validation/auth error",
+              "originalRequest": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/api/v1/auth/register",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["api", "v1", "auth", "register"]
+                },
+                "description": "Register a pending customer; same response for duplicate email. Use resend-verification to request delivery.",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"email\": \"{{email}}\",\n  \"name\": \"Example Customer\",\n  \"password\": \"{{password}}\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "status": "Bad Request",
+              "code": 400,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"success\": false,\n  \"error\": {\n    \"code\": \"VALIDATION_ERROR\",\n    \"message\": \"Request validation failed\"\n  }\n}"
+            }
+          ]
+        },
+        {
+          "name": "POST /auth/login",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/auth/login",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "auth", "login"]
+            },
+            "description": "Sign in with verified email and password; enrolled administrators must supply a fresh TOTP code",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"{{email}}\",\n  \"password\": \"{{password}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Expected status', () => pm.response.to.have.status(200));",
+                  "const body = pm.response.json();",
+                  "pm.test('Response envelope', () => pm.expect(body.success).to.eql(true));",
+                  "pm.test('No credential fields', () => pm.expect(pm.response.text()).not.to.match(/passwordHash|tokenHash|encryptedSecret/));",
+                  "pm.test('Token pair', () => { pm.expect(body.data.accessToken).to.be.a('string'); pm.expect(body.data.refreshToken).to.match(/^[A-Za-z0-9_-]{43}$/); });",
+                  "pm.environment.set('accessToken', body.data.accessToken); pm.environment.set('refreshToken', body.data.refreshToken);"
+                ]
+              }
+            }
+          ],
+          "response": [
+            {
+              "name": "Illustrative response (not an execution record)",
+              "originalRequest": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/api/v1/auth/login",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["api", "v1", "auth", "login"]
+                },
+                "description": "Sign in with verified email and password; enrolled administrators must supply a fresh TOTP code",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"email\": \"{{email}}\",\n  \"password\": \"{{password}}\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                },
+                {
+                  "key": "Cache-Control",
+                  "value": "no-store"
+                }
+              ],
+              "body": "{\n  \"success\": true,\n  \"data\": {\n    \"accessToken\": \"example-access-token-not-valid\",\n    \"refreshToken\": \"example-refresh-token-not-valid\",\n    \"tokenType\": \"Bearer\",\n    \"expiresIn\": 600\n  }\n}"
+            },
+            {
+              "name": "Illustrative validation/auth error",
+              "originalRequest": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/api/v1/auth/login",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["api", "v1", "auth", "login"]
+                },
+                "description": "Sign in with verified email and password; enrolled administrators must supply a fresh TOTP code",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"email\": \"{{email}}\",\n  \"password\": \"{{password}}\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "status": "Bad Request",
+              "code": 400,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"success\": false,\n  \"error\": {\n    \"code\": \"VALIDATION_ERROR\",\n    \"message\": \"Request validation failed\"\n  }\n}"
+            }
+          ]
+        },
+        {
+          "name": "POST /auth/refresh",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/auth/refresh",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "auth", "refresh"]
+            },
+            "description": "Rotate refresh token; reusing an old token revokes its entire family, including concurrent refreshes",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"refreshToken\": \"{{refreshToken}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Expected status', () => pm.response.to.have.status(200));",
+                  "const body = pm.response.json();",
+                  "pm.test('Response envelope', () => pm.expect(body.success).to.eql(true));",
+                  "pm.test('No credential fields', () => pm.expect(pm.response.text()).not.to.match(/passwordHash|tokenHash|encryptedSecret/));",
+                  "pm.test('Token pair', () => { pm.expect(body.data.accessToken).to.be.a('string'); pm.expect(body.data.refreshToken).to.match(/^[A-Za-z0-9_-]{43}$/); });",
+                  "pm.environment.set('accessToken', body.data.accessToken); pm.environment.set('refreshToken', body.data.refreshToken);"
+                ]
+              }
+            }
+          ],
+          "response": [
+            {
+              "name": "Illustrative response (not an execution record)",
+              "originalRequest": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/api/v1/auth/refresh",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["api", "v1", "auth", "refresh"]
+                },
+                "description": "Rotate refresh token; reusing an old token revokes its entire family, including concurrent refreshes",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"refreshToken\": \"{{refreshToken}}\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                },
+                {
+                  "key": "Cache-Control",
+                  "value": "no-store"
+                }
+              ],
+              "body": "{\n  \"success\": true,\n  \"data\": {\n    \"accessToken\": \"example-access-token-not-valid\",\n    \"refreshToken\": \"example-refresh-token-not-valid\",\n    \"tokenType\": \"Bearer\",\n    \"expiresIn\": 600\n  }\n}"
+            },
+            {
+              "name": "Illustrative validation/auth error",
+              "originalRequest": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/api/v1/auth/refresh",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["api", "v1", "auth", "refresh"]
+                },
+                "description": "Rotate refresh token; reusing an old token revokes its entire family, including concurrent refreshes",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"refreshToken\": \"{{refreshToken}}\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "status": "Bad Request",
+              "code": 400,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"success\": false,\n  \"error\": {\n    \"code\": \"VALIDATION_ERROR\",\n    \"message\": \"Request validation failed\"\n  }\n}"
+            }
+          ]
+        },
+        {
+          "name": "POST /auth/logout",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/auth/logout",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "auth", "logout"]
+            },
+            "description": "Idempotently revoke the supplied refresh token family",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"refreshToken\": \"{{refreshToken}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Expected status', () => pm.response.to.have.status(200));",
+                  "const body = pm.response.json();",
+                  "pm.test('Response envelope', () => pm.expect(body.success).to.eql(true));",
+                  "pm.test('No credential fields', () => pm.expect(pm.response.text()).not.to.match(/passwordHash|tokenHash|encryptedSecret/));"
+                ]
+              }
+            }
+          ],
+          "response": [
+            {
+              "name": "Illustrative response (not an execution record)",
+              "originalRequest": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/api/v1/auth/logout",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["api", "v1", "auth", "logout"]
+                },
+                "description": "Idempotently revoke the supplied refresh token family",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"refreshToken\": \"{{refreshToken}}\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                },
+                {
+                  "key": "Cache-Control",
+                  "value": "no-store"
+                }
+              ],
+              "body": "{\n  \"success\": true,\n  \"data\": {\n    \"message\": \"Request completed\"\n  }\n}"
+            },
+            {
+              "name": "Illustrative validation/auth error",
+              "originalRequest": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/api/v1/auth/logout",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["api", "v1", "auth", "logout"]
+                },
+                "description": "Idempotently revoke the supplied refresh token family",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"refreshToken\": \"{{refreshToken}}\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "status": "Bad Request",
+              "code": 400,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"success\": false,\n  \"error\": {\n    \"code\": \"VALIDATION_ERROR\",\n    \"message\": \"Request validation failed\"\n  }\n}"
+            }
+          ]
+        },
+        {
+          "name": "POST /auth/logout-all",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/auth/logout-all",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "auth", "logout-all"]
+            },
+            "description": "Revoke every session, including this access token"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Expected status', () => pm.response.to.have.status(200));",
+                  "const body = pm.response.json();",
+                  "pm.test('Response envelope', () => pm.expect(body.success).to.eql(true));",
+                  "pm.test('No credential fields', () => pm.expect(pm.response.text()).not.to.match(/passwordHash|tokenHash|encryptedSecret/));"
+                ]
+              }
+            }
+          ],
+          "response": [
+            {
+              "name": "Illustrative response (not an execution record)",
+              "originalRequest": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{accessToken}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/api/v1/auth/logout-all",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["api", "v1", "auth", "logout-all"]
+                },
+                "description": "Revoke every session, including this access token"
+              },
+              "status": "OK",
+              "code": 200,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                },
+                {
+                  "key": "Cache-Control",
+                  "value": "no-store"
+                }
+              ],
+              "body": "{\n  \"success\": true,\n  \"data\": {\n    \"message\": \"Request completed\"\n  }\n}"
+            },
+            {
+              "name": "Illustrative validation/auth error",
+              "originalRequest": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{accessToken}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/api/v1/auth/logout-all",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["api", "v1", "auth", "logout-all"]
+                },
+                "description": "Revoke every session, including this access token"
+              },
+              "status": "Bad Request",
+              "code": 400,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"success\": false,\n  \"error\": {\n    \"code\": \"VALIDATION_ERROR\",\n    \"message\": \"Request validation failed\"\n  }\n}"
+            }
+          ]
+        },
+        {
+          "name": "GET /auth/me",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/auth/me",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "auth", "me"]
+            },
+            "description": "Current account (alias for GET /me)"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Expected status', () => pm.response.to.have.status(200));",
+                  "const body = pm.response.json();",
+                  "pm.test('Response envelope', () => pm.expect(body.success).to.eql(true));",
+                  "pm.test('No credential fields', () => pm.expect(pm.response.text()).not.to.match(/passwordHash|tokenHash|encryptedSecret/));"
+                ]
+              }
+            }
+          ],
+          "response": [
+            {
+              "name": "Illustrative response (not an execution record)",
+              "originalRequest": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{accessToken}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/api/v1/auth/me",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["api", "v1", "auth", "me"]
+                },
+                "description": "Current account (alias for GET /me)"
+              },
+              "status": "OK",
+              "code": 200,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                },
+                {
+                  "key": "Cache-Control",
+                  "value": "no-store"
+                }
+              ],
+              "body": "{\n  \"success\": true,\n  \"data\": {\n    \"id\": \"00000000-0000-4000-8000-000000000001\",\n    \"email\": \"customer@example.com\",\n    \"name\": \"Example Customer\",\n    \"phone\": null,\n    \"role\": \"CUSTOMER\",\n    \"status\": \"ACTIVE\",\n    \"emailVerifiedAt\": \"2026-10-15T10:00:00.000Z\",\n    \"phoneVerifiedAt\": null\n  }\n}"
+            },
+            {
+              "name": "Illustrative validation/auth error",
+              "originalRequest": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{accessToken}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/api/v1/auth/me",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["api", "v1", "auth", "me"]
+                },
+                "description": "Current account (alias for GET /me)"
+              },
+              "status": "Bad Request",
+              "code": 400,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"success\": false,\n  \"error\": {\n    \"code\": \"VALIDATION_ERROR\",\n    \"message\": \"Request validation failed\"\n  }\n}"
+            }
+          ]
+        },
+        {
+          "name": "POST /auth/password/forgot",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/auth/password/forgot",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "auth", "password", "forgot"]
+            },
+            "description": "Request password recovery; generic response even if delivery is unavailable",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"{{email}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Expected status', () => pm.response.to.have.status(202));",
+                  "const body = pm.response.json();",
+                  "pm.test('Response envelope', () => pm.expect(body.success).to.eql(true));",
+                  "pm.test('No credential fields', () => pm.expect(pm.response.text()).not.to.match(/passwordHash|tokenHash|encryptedSecret/));"
+                ]
+              }
+            }
+          ],
+          "response": [
+            {
+              "name": "Illustrative response (not an execution record)",
+              "originalRequest": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/api/v1/auth/password/forgot",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["api", "v1", "auth", "password", "forgot"]
+                },
+                "description": "Request password recovery; generic response even if delivery is unavailable",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"email\": \"{{email}}\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "status": "Accepted",
+              "code": 202,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                },
+                {
+                  "key": "Cache-Control",
+                  "value": "no-store"
+                }
+              ],
+              "body": "{\n  \"success\": true,\n  \"data\": {\n    \"message\": \"Request completed\"\n  }\n}"
+            },
+            {
+              "name": "Illustrative validation/auth error",
+              "originalRequest": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/api/v1/auth/password/forgot",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["api", "v1", "auth", "password", "forgot"]
+                },
+                "description": "Request password recovery; generic response even if delivery is unavailable",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"email\": \"{{email}}\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "status": "Bad Request",
+              "code": 400,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"success\": false,\n  \"error\": {\n    \"code\": \"VALIDATION_ERROR\",\n    \"message\": \"Request validation failed\"\n  }\n}"
+            }
+          ]
+        },
+        {
+          "name": "POST /auth/password/reset",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/auth/password/reset",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "auth", "password", "reset"]
+            },
+            "description": "Consume a single-use reset token and revoke all sessions",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"token\": \"{{challengeToken}}\",\n  \"password\": \"{{newPassword}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Expected status', () => pm.response.to.have.status(200));",
+                  "const body = pm.response.json();",
+                  "pm.test('Response envelope', () => pm.expect(body.success).to.eql(true));",
+                  "pm.test('No credential fields', () => pm.expect(pm.response.text()).not.to.match(/passwordHash|tokenHash|encryptedSecret/));"
+                ]
+              }
+            }
+          ],
+          "response": [
+            {
+              "name": "Illustrative response (not an execution record)",
+              "originalRequest": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/api/v1/auth/password/reset",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["api", "v1", "auth", "password", "reset"]
+                },
+                "description": "Consume a single-use reset token and revoke all sessions",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"token\": \"{{challengeToken}}\",\n  \"password\": \"{{newPassword}}\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                },
+                {
+                  "key": "Cache-Control",
+                  "value": "no-store"
+                }
+              ],
+              "body": "{\n  \"success\": true,\n  \"data\": {\n    \"message\": \"Request completed\"\n  }\n}"
+            },
+            {
+              "name": "Illustrative validation/auth error",
+              "originalRequest": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/api/v1/auth/password/reset",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["api", "v1", "auth", "password", "reset"]
+                },
+                "description": "Consume a single-use reset token and revoke all sessions",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"token\": \"{{challengeToken}}\",\n  \"password\": \"{{newPassword}}\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "status": "Bad Request",
+              "code": 400,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"success\": false,\n  \"error\": {\n    \"code\": \"VALIDATION_ERROR\",\n    \"message\": \"Request validation failed\"\n  }\n}"
+            }
+          ]
+        },
+        {
+          "name": "POST /auth/email/verify",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/auth/email/verify",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "auth", "email", "verify"]
+            },
+            "description": "Consume an email verification token and activate the account",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"token\": \"{{challengeToken}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Expected status', () => pm.response.to.have.status(200));",
+                  "const body = pm.response.json();",
+                  "pm.test('Response envelope', () => pm.expect(body.success).to.eql(true));",
+                  "pm.test('No credential fields', () => pm.expect(pm.response.text()).not.to.match(/passwordHash|tokenHash|encryptedSecret/));"
+                ]
+              }
+            }
+          ],
+          "response": [
+            {
+              "name": "Illustrative response (not an execution record)",
+              "originalRequest": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/api/v1/auth/email/verify",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["api", "v1", "auth", "email", "verify"]
+                },
+                "description": "Consume an email verification token and activate the account",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"token\": \"{{challengeToken}}\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                },
+                {
+                  "key": "Cache-Control",
+                  "value": "no-store"
+                }
+              ],
+              "body": "{\n  \"success\": true,\n  \"data\": {\n    \"message\": \"Request completed\"\n  }\n}"
+            },
+            {
+              "name": "Illustrative validation/auth error",
+              "originalRequest": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/api/v1/auth/email/verify",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["api", "v1", "auth", "email", "verify"]
+                },
+                "description": "Consume an email verification token and activate the account",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"token\": \"{{challengeToken}}\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "status": "Bad Request",
+              "code": 400,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"success\": false,\n  \"error\": {\n    \"code\": \"VALIDATION_ERROR\",\n    \"message\": \"Request validation failed\"\n  }\n}"
+            }
+          ]
+        },
+        {
+          "name": "POST /auth/email/resend-verification",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/auth/email/resend-verification",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "auth", "email", "resend-verification"]
+            },
+            "description": "Request verification; requires configured delivery adapter; generic response",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"{{email}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Expected status', () => pm.response.to.have.status(202));",
+                  "const body = pm.response.json();",
+                  "pm.test('Response envelope', () => pm.expect(body.success).to.eql(true));",
+                  "pm.test('No credential fields', () => pm.expect(pm.response.text()).not.to.match(/passwordHash|tokenHash|encryptedSecret/));"
+                ]
+              }
+            }
+          ],
+          "response": [
+            {
+              "name": "Illustrative response (not an execution record)",
+              "originalRequest": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/api/v1/auth/email/resend-verification",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["api", "v1", "auth", "email", "resend-verification"]
+                },
+                "description": "Request verification; requires configured delivery adapter; generic response",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"email\": \"{{email}}\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "status": "Accepted",
+              "code": 202,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                },
+                {
+                  "key": "Cache-Control",
+                  "value": "no-store"
+                }
+              ],
+              "body": "{\n  \"success\": true,\n  \"data\": {\n    \"message\": \"Request completed\"\n  }\n}"
+            },
+            {
+              "name": "Illustrative validation/auth error",
+              "originalRequest": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/api/v1/auth/email/resend-verification",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["api", "v1", "auth", "email", "resend-verification"]
+                },
+                "description": "Request verification; requires configured delivery adapter; generic response",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"email\": \"{{email}}\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "status": "Bad Request",
+              "code": 400,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"success\": false,\n  \"error\": {\n    \"code\": \"VALIDATION_ERROR\",\n    \"message\": \"Request validation failed\"\n  }\n}"
+            }
+          ]
+        },
+        {
+          "name": "POST /auth/phone/request-verification",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/auth/phone/request-verification",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "auth", "phone", "request-verification"]
+            },
+            "description": "Request a token delivered to the current profile phone via an SMS adapter"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Expected status', () => pm.response.to.have.status(202));",
+                  "const body = pm.response.json();",
+                  "pm.test('Response envelope', () => pm.expect(body.success).to.eql(true));",
+                  "pm.test('No credential fields', () => pm.expect(pm.response.text()).not.to.match(/passwordHash|tokenHash|encryptedSecret/));"
+                ]
+              }
+            }
+          ],
+          "response": [
+            {
+              "name": "Illustrative response (not an execution record)",
+              "originalRequest": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{accessToken}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/api/v1/auth/phone/request-verification",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["api", "v1", "auth", "phone", "request-verification"]
+                },
+                "description": "Request a token delivered to the current profile phone via an SMS adapter"
+              },
+              "status": "Accepted",
+              "code": 202,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                },
+                {
+                  "key": "Cache-Control",
+                  "value": "no-store"
+                }
+              ],
+              "body": "{\n  \"success\": true,\n  \"data\": {\n    \"message\": \"Request completed\"\n  }\n}"
+            },
+            {
+              "name": "Illustrative validation/auth error",
+              "originalRequest": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{accessToken}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/api/v1/auth/phone/request-verification",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["api", "v1", "auth", "phone", "request-verification"]
+                },
+                "description": "Request a token delivered to the current profile phone via an SMS adapter"
+              },
+              "status": "Bad Request",
+              "code": 400,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"success\": false,\n  \"error\": {\n    \"code\": \"VALIDATION_ERROR\",\n    \"message\": \"Request validation failed\"\n  }\n}"
+            }
+          ]
+        },
+        {
+          "name": "POST /auth/phone/verify",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/auth/phone/verify",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "auth", "phone", "verify"]
+            },
+            "description": "Consume a single-use phone verification token",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"token\": \"{{challengeToken}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Expected status', () => pm.response.to.have.status(200));",
+                  "const body = pm.response.json();",
+                  "pm.test('Response envelope', () => pm.expect(body.success).to.eql(true));",
+                  "pm.test('No credential fields', () => pm.expect(pm.response.text()).not.to.match(/passwordHash|tokenHash|encryptedSecret/));"
+                ]
+              }
+            }
+          ],
+          "response": [
+            {
+              "name": "Illustrative response (not an execution record)",
+              "originalRequest": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/api/v1/auth/phone/verify",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["api", "v1", "auth", "phone", "verify"]
+                },
+                "description": "Consume a single-use phone verification token",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"token\": \"{{challengeToken}}\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                },
+                {
+                  "key": "Cache-Control",
+                  "value": "no-store"
+                }
+              ],
+              "body": "{\n  \"success\": true,\n  \"data\": {\n    \"message\": \"Request completed\"\n  }\n}"
+            },
+            {
+              "name": "Illustrative validation/auth error",
+              "originalRequest": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/api/v1/auth/phone/verify",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["api", "v1", "auth", "phone", "verify"]
+                },
+                "description": "Consume a single-use phone verification token",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"token\": \"{{challengeToken}}\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "status": "Bad Request",
+              "code": 400,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"success\": false,\n  \"error\": {\n    \"code\": \"VALIDATION_ERROR\",\n    \"message\": \"Request validation failed\"\n  }\n}"
+            }
+          ]
+        },
+        {
+          "name": "POST /auth/mfa/setup",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/auth/mfa/setup",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "auth", "mfa", "setup"]
+            },
+            "description": "Administrator only: reauthenticate with password and enroll TOTP. Store the returned secret securely.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"password\": \"{{password}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Expected status', () => pm.response.to.have.status(200));",
+                  "const body = pm.response.json();",
+                  "pm.test('Response envelope', () => pm.expect(body.success).to.eql(true));",
+                  "pm.test('No credential fields', () => pm.expect(pm.response.text()).not.to.match(/passwordHash|tokenHash|encryptedSecret/));"
+                ]
+              }
+            }
+          ],
+          "response": [
+            {
+              "name": "Illustrative response (not an execution record)",
+              "originalRequest": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{accessToken}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/api/v1/auth/mfa/setup",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["api", "v1", "auth", "mfa", "setup"]
+                },
+                "description": "Administrator only: reauthenticate with password and enroll TOTP. Store the returned secret securely.",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"password\": \"{{password}}\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                },
+                {
+                  "key": "Cache-Control",
+                  "value": "no-store"
+                }
+              ],
+              "body": "{\n  \"success\": true,\n  \"data\": {\n    \"secret\": \"EXAMPLE-NOT-A-REAL-SECRET\",\n    \"uri\": \"otpauth://totp/Anajao:Administrator?secret=EXAMPLE\"\n  }\n}"
+            },
+            {
+              "name": "Illustrative validation/auth error",
+              "originalRequest": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{accessToken}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/api/v1/auth/mfa/setup",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["api", "v1", "auth", "mfa", "setup"]
+                },
+                "description": "Administrator only: reauthenticate with password and enroll TOTP. Store the returned secret securely.",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"password\": \"{{password}}\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "status": "Bad Request",
+              "code": 400,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"success\": false,\n  \"error\": {\n    \"code\": \"VALIDATION_ERROR\",\n    \"message\": \"Request validation failed\"\n  }\n}"
+            }
+          ]
+        },
+        {
+          "name": "POST /auth/mfa/confirm",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/auth/mfa/confirm",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "auth", "mfa", "confirm"]
+            },
+            "description": "Administrator only: confirm TOTP and revoke all sessions; sign in again using a fresh code",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"code\": \"{{mfaCode}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Expected status', () => pm.response.to.have.status(200));",
+                  "const body = pm.response.json();",
+                  "pm.test('Response envelope', () => pm.expect(body.success).to.eql(true));",
+                  "pm.test('No credential fields', () => pm.expect(pm.response.text()).not.to.match(/passwordHash|tokenHash|encryptedSecret/));"
+                ]
+              }
+            }
+          ],
+          "response": [
+            {
+              "name": "Illustrative response (not an execution record)",
+              "originalRequest": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{accessToken}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/api/v1/auth/mfa/confirm",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["api", "v1", "auth", "mfa", "confirm"]
+                },
+                "description": "Administrator only: confirm TOTP and revoke all sessions; sign in again using a fresh code",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"code\": \"{{mfaCode}}\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                },
+                {
+                  "key": "Cache-Control",
+                  "value": "no-store"
+                }
+              ],
+              "body": "{\n  \"success\": true,\n  \"data\": {\n    \"message\": \"Request completed\"\n  }\n}"
+            },
+            {
+              "name": "Illustrative validation/auth error",
+              "originalRequest": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{accessToken}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/api/v1/auth/mfa/confirm",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["api", "v1", "auth", "mfa", "confirm"]
+                },
+                "description": "Administrator only: confirm TOTP and revoke all sessions; sign in again using a fresh code",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"code\": \"{{mfaCode}}\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "status": "Bad Request",
+              "code": 400,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"success\": false,\n  \"error\": {\n    \"code\": \"VALIDATION_ERROR\",\n    \"message\": \"Request validation failed\"\n  }\n}"
+            }
+          ]
+        },
+        {
+          "name": "POST /auth/social/{provider}",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/auth/social/google",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "auth", "social", "google"]
+            },
+            "description": "Reserved Google/Apple boundary; unavailable until a verified integration is implemented"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Expected status', () => pm.response.to.have.status(503));",
+                  "const body = pm.response.json();",
+                  "pm.test('Response envelope', () => pm.expect(body.success).to.eql(false));",
+                  "pm.test('No credential fields', () => pm.expect(pm.response.text()).not.to.match(/passwordHash|tokenHash|encryptedSecret/));"
+                ]
+              }
+            }
+          ],
+          "response": [
+            {
+              "name": "Illustrative response (not an execution record)",
+              "originalRequest": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/api/v1/auth/social/google",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["api", "v1", "auth", "social", "google"]
+                },
+                "description": "Reserved Google/Apple boundary; unavailable until a verified integration is implemented"
+              },
+              "status": "Service Unavailable",
+              "code": 503,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                },
+                {
+                  "key": "Cache-Control",
+                  "value": "no-store"
+                }
+              ],
+              "body": "{\n  \"success\": false,\n  \"error\": {\n    \"code\": \"PROVIDER_UNAVAILABLE\",\n    \"message\": \"Social login requires a verified provider integration\"\n  }\n}"
+            },
+            {
+              "name": "Illustrative validation/auth error",
+              "originalRequest": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/api/v1/auth/social/google",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["api", "v1", "auth", "social", "google"]
+                },
+                "description": "Reserved Google/Apple boundary; unavailable until a verified integration is implemented"
+              },
+              "status": "Bad Request",
+              "code": 400,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"success\": false,\n  \"error\": {\n    \"code\": \"VALIDATION_ERROR\",\n    \"message\": \"Request validation failed\"\n  }\n}"
+            }
+          ]
+        },
+        {
+          "name": "GET /me",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/me",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "me"]
+            },
+            "description": "Get current account without credential fields"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Expected status', () => pm.response.to.have.status(200));",
+                  "const body = pm.response.json();",
+                  "pm.test('Response envelope', () => pm.expect(body.success).to.eql(true));",
+                  "pm.test('No credential fields', () => pm.expect(pm.response.text()).not.to.match(/passwordHash|tokenHash|encryptedSecret/));"
+                ]
+              }
+            }
+          ],
+          "response": [
+            {
+              "name": "Illustrative response (not an execution record)",
+              "originalRequest": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{accessToken}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/api/v1/me",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["api", "v1", "me"]
+                },
+                "description": "Get current account without credential fields"
+              },
+              "status": "OK",
+              "code": 200,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                },
+                {
+                  "key": "Cache-Control",
+                  "value": "no-store"
+                }
+              ],
+              "body": "{\n  \"success\": true,\n  \"data\": {\n    \"id\": \"00000000-0000-4000-8000-000000000001\",\n    \"email\": \"customer@example.com\",\n    \"name\": \"Example Customer\",\n    \"phone\": null,\n    \"role\": \"CUSTOMER\",\n    \"status\": \"ACTIVE\",\n    \"emailVerifiedAt\": \"2026-10-15T10:00:00.000Z\",\n    \"phoneVerifiedAt\": null\n  }\n}"
+            },
+            {
+              "name": "Illustrative validation/auth error",
+              "originalRequest": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{accessToken}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/api/v1/me",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["api", "v1", "me"]
+                },
+                "description": "Get current account without credential fields"
+              },
+              "status": "Bad Request",
+              "code": 400,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"success\": false,\n  \"error\": {\n    \"code\": \"VALIDATION_ERROR\",\n    \"message\": \"Request validation failed\"\n  }\n}"
+            }
+          ]
+        },
+        {
+          "name": "PATCH /me",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/me",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "me"]
+            },
+            "description": "Update name or phone; changing phone clears its verification",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Updated Customer\",\n  \"phone\": \"+2348012345678\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Expected status', () => pm.response.to.have.status(200));",
+                  "const body = pm.response.json();",
+                  "pm.test('Response envelope', () => pm.expect(body.success).to.eql(true));",
+                  "pm.test('No credential fields', () => pm.expect(pm.response.text()).not.to.match(/passwordHash|tokenHash|encryptedSecret/));"
+                ]
+              }
+            }
+          ],
+          "response": [
+            {
+              "name": "Illustrative response (not an execution record)",
+              "originalRequest": {
+                "method": "PATCH",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{accessToken}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/api/v1/me",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["api", "v1", "me"]
+                },
+                "description": "Update name or phone; changing phone clears its verification",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"name\": \"Updated Customer\",\n  \"phone\": \"+2348012345678\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                },
+                {
+                  "key": "Cache-Control",
+                  "value": "no-store"
+                }
+              ],
+              "body": "{\n  \"success\": true,\n  \"data\": {\n    \"id\": \"00000000-0000-4000-8000-000000000001\",\n    \"email\": \"customer@example.com\",\n    \"name\": \"Example Customer\",\n    \"phone\": null,\n    \"role\": \"CUSTOMER\",\n    \"status\": \"ACTIVE\",\n    \"emailVerifiedAt\": \"2026-10-15T10:00:00.000Z\",\n    \"phoneVerifiedAt\": null\n  }\n}"
+            },
+            {
+              "name": "Illustrative validation/auth error",
+              "originalRequest": {
+                "method": "PATCH",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{accessToken}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/api/v1/me",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["api", "v1", "me"]
+                },
+                "description": "Update name or phone; changing phone clears its verification",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"name\": \"Updated Customer\",\n  \"phone\": \"+2348012345678\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "status": "Bad Request",
+              "code": 400,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"success\": false,\n  \"error\": {\n    \"code\": \"VALIDATION_ERROR\",\n    \"message\": \"Request validation failed\"\n  }\n}"
+            }
+          ]
+        },
+        {
+          "name": "GET /me/addresses",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/me/addresses",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "me", "addresses"]
+            },
+            "description": "List owned addresses (maximum 100 per account, newest first)"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Expected status', () => pm.response.to.have.status(200));",
+                  "const body = pm.response.json();",
+                  "pm.test('Response envelope', () => pm.expect(body.success).to.eql(true));",
+                  "pm.test('No credential fields', () => pm.expect(pm.response.text()).not.to.match(/passwordHash|tokenHash|encryptedSecret/));"
+                ]
+              }
+            }
+          ],
+          "response": [
+            {
+              "name": "Illustrative response (not an execution record)",
+              "originalRequest": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{accessToken}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/api/v1/me/addresses",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["api", "v1", "me", "addresses"]
+                },
+                "description": "List owned addresses (maximum 100 per account, newest first)"
+              },
+              "status": "OK",
+              "code": 200,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                },
+                {
+                  "key": "Cache-Control",
+                  "value": "no-store"
+                }
+              ],
+              "body": "{\n  \"success\": true,\n  \"data\": []\n}"
+            },
+            {
+              "name": "Illustrative validation/auth error",
+              "originalRequest": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{accessToken}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/api/v1/me/addresses",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["api", "v1", "me", "addresses"]
+                },
+                "description": "List owned addresses (maximum 100 per account, newest first)"
+              },
+              "status": "Bad Request",
+              "code": 400,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"success\": false,\n  \"error\": {\n    \"code\": \"VALIDATION_ERROR\",\n    \"message\": \"Request validation failed\"\n  }\n}"
+            }
+          ]
+        },
+        {
+          "name": "POST /me/addresses",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/me/addresses",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "me", "addresses"]
+            },
+            "description": "Create an owned address (maximum 100)",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"label\": \"Home\",\n  \"recipient\": \"Example Customer\",\n  \"line1\": \"1 Example Street\",\n  \"city\": \"Lagos\",\n  \"region\": \"Lagos\",\n  \"country\": \"NG\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Expected status', () => pm.response.to.have.status(201));",
+                  "const body = pm.response.json();",
+                  "pm.test('Response envelope', () => pm.expect(body.success).to.eql(true));",
+                  "pm.test('No credential fields', () => pm.expect(pm.response.text()).not.to.match(/passwordHash|tokenHash|encryptedSecret/));",
+                  "pm.environment.set('addressId', body.data.id);"
+                ]
+              }
+            }
+          ],
+          "response": [
+            {
+              "name": "Illustrative response (not an execution record)",
+              "originalRequest": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{accessToken}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/api/v1/me/addresses",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["api", "v1", "me", "addresses"]
+                },
+                "description": "Create an owned address (maximum 100)",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"label\": \"Home\",\n  \"recipient\": \"Example Customer\",\n  \"line1\": \"1 Example Street\",\n  \"city\": \"Lagos\",\n  \"region\": \"Lagos\",\n  \"country\": \"NG\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "status": "Created",
+              "code": 201,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                },
+                {
+                  "key": "Cache-Control",
+                  "value": "no-store"
+                }
+              ],
+              "body": "{\n  \"success\": true,\n  \"data\": {\n    \"id\": \"00000000-0000-4000-8000-000000000002\",\n    \"userId\": \"00000000-0000-4000-8000-000000000001\",\n    \"label\": \"Home\",\n    \"recipient\": \"Example Customer\",\n    \"line1\": \"1 Example Street\",\n    \"line2\": null,\n    \"city\": \"Lagos\",\n    \"region\": \"Lagos\",\n    \"postalCode\": null,\n    \"country\": \"NG\",\n    \"createdAt\": \"2026-10-15T10:00:00.000Z\"\n  }\n}"
+            },
+            {
+              "name": "Illustrative validation/auth error",
+              "originalRequest": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{accessToken}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/api/v1/me/addresses",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["api", "v1", "me", "addresses"]
+                },
+                "description": "Create an owned address (maximum 100)",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"label\": \"Home\",\n  \"recipient\": \"Example Customer\",\n  \"line1\": \"1 Example Street\",\n  \"city\": \"Lagos\",\n  \"region\": \"Lagos\",\n  \"country\": \"NG\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "status": "Bad Request",
+              "code": 400,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"success\": false,\n  \"error\": {\n    \"code\": \"VALIDATION_ERROR\",\n    \"message\": \"Request validation failed\"\n  }\n}"
+            }
+          ]
+        },
+        {
+          "name": "DELETE /me/addresses/{id}",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/me/addresses/{{addressId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "me", "addresses", "{{addressId}}"]
+            },
+            "description": "Delete an owned address; unknown or other-account IDs return 404"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Expected status', () => pm.response.to.have.status(200));",
+                  "const body = pm.response.json();",
+                  "pm.test('Response envelope', () => pm.expect(body.success).to.eql(true));",
+                  "pm.test('No credential fields', () => pm.expect(pm.response.text()).not.to.match(/passwordHash|tokenHash|encryptedSecret/));"
+                ]
+              }
+            }
+          ],
+          "response": [
+            {
+              "name": "Illustrative response (not an execution record)",
+              "originalRequest": {
+                "method": "DELETE",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{accessToken}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/api/v1/me/addresses/{{addressId}}",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["api", "v1", "me", "addresses", "{{addressId}}"]
+                },
+                "description": "Delete an owned address; unknown or other-account IDs return 404"
+              },
+              "status": "OK",
+              "code": 200,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                },
+                {
+                  "key": "Cache-Control",
+                  "value": "no-store"
+                }
+              ],
+              "body": "{\n  \"success\": true,\n  \"data\": {\n    \"message\": \"Request completed\"\n  }\n}"
+            },
+            {
+              "name": "Illustrative validation/auth error",
+              "originalRequest": {
+                "method": "DELETE",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{accessToken}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/api/v1/me/addresses/{{addressId}}",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["api", "v1", "me", "addresses", "{{addressId}}"]
+                },
+                "description": "Delete an owned address; unknown or other-account IDs return 404"
+              },
+              "status": "Bad Request",
+              "code": 400,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"success\": false,\n  \"error\": {\n    \"code\": \"VALIDATION_ERROR\",\n    \"message\": \"Request validation failed\"\n  }\n}"
+            }
+          ]
+        },
+        {
+          "name": "POST /me/privacy-requests",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/me/privacy-requests",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "me", "privacy-requests"]
+            },
+            "description": "Request export or deletion; DELETE disables account and revokes sessions pending manual fulfillment",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"kind\": \"EXPORT\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Expected status', () => pm.response.to.have.status(202));",
+                  "const body = pm.response.json();",
+                  "pm.test('Response envelope', () => pm.expect(body.success).to.eql(true));",
+                  "pm.test('No credential fields', () => pm.expect(pm.response.text()).not.to.match(/passwordHash|tokenHash|encryptedSecret/));"
+                ]
+              }
+            }
+          ],
+          "response": [
+            {
+              "name": "Illustrative response (not an execution record)",
+              "originalRequest": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{accessToken}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/api/v1/me/privacy-requests",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["api", "v1", "me", "privacy-requests"]
+                },
+                "description": "Request export or deletion; DELETE disables account and revokes sessions pending manual fulfillment",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"kind\": \"EXPORT\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "status": "Accepted",
+              "code": 202,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                },
+                {
+                  "key": "Cache-Control",
+                  "value": "no-store"
+                }
+              ],
+              "body": "{\n  \"success\": true,\n  \"data\": {\n    \"id\": \"00000000-0000-4000-8000-000000000003\",\n    \"userId\": \"00000000-0000-4000-8000-000000000001\",\n    \"kind\": \"EXPORT\",\n    \"status\": \"PENDING\",\n    \"createdAt\": \"2026-10-15T10:00:00.000Z\"\n  }\n}"
+            },
+            {
+              "name": "Illustrative validation/auth error",
+              "originalRequest": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{accessToken}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/api/v1/me/privacy-requests",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["api", "v1", "me", "privacy-requests"]
+                },
+                "description": "Request export or deletion; DELETE disables account and revokes sessions pending manual fulfillment",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"kind\": \"EXPORT\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "status": "Bad Request",
+              "code": 400,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"success\": false,\n  \"error\": {\n    \"code\": \"VALIDATION_ERROR\",\n    \"message\": \"Request validation failed\"\n  }\n}"
+            }
+          ]
+        },
+        {
+          "name": "GET /admin/access-check",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/admin/access-check",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "admin", "access-check"]
+            },
+            "description": "Requires current ADMIN role, confirmed MFA factor, and MFA-authenticated session"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Expected status', () => pm.response.to.have.status(200));",
+                  "const body = pm.response.json();",
+                  "pm.test('Response envelope', () => pm.expect(body.success).to.eql(true));",
+                  "pm.test('No credential fields', () => pm.expect(pm.response.text()).not.to.match(/passwordHash|tokenHash|encryptedSecret/));"
+                ]
+              }
+            }
+          ],
+          "response": [
+            {
+              "name": "Illustrative response (not an execution record)",
+              "originalRequest": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{accessToken}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/api/v1/admin/access-check",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["api", "v1", "admin", "access-check"]
+                },
+                "description": "Requires current ADMIN role, confirmed MFA factor, and MFA-authenticated session"
+              },
+              "status": "OK",
+              "code": 200,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                },
+                {
+                  "key": "Cache-Control",
+                  "value": "no-store"
+                }
+              ],
+              "body": "{\n  \"success\": true,\n  \"data\": {\n    \"authorized\": true\n  }\n}"
+            },
+            {
+              "name": "Illustrative validation/auth error",
+              "originalRequest": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{accessToken}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/api/v1/admin/access-check",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["api", "v1", "admin", "access-check"]
+                },
+                "description": "Requires current ADMIN role, confirmed MFA factor, and MFA-authenticated session"
+              },
+              "status": "Bad Request",
+              "code": 400,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"success\": false,\n  \"error\": {\n    \"code\": \"VALIDATION_ERROR\",\n    \"message\": \"Request validation failed\"\n  }\n}"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Negative examples",
+      "item": [
+        {
+          "name": "Unauthenticated profile",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/me",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "me"]
+            },
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ]
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Expected denial', () => pm.response.to.have.status(401));",
+                  "pm.test('Safe error envelope', () => pm.expect(pm.response.json().success).to.eql(false));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Customer denied admin access (use customer token)",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/admin/access-check",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "admin", "access-check"]
+            },
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              }
+            ]
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Expected denial', () => pm.response.to.have.status(403));",
+                  "pm.test('Safe error envelope', () => pm.expect(pm.response.json().success).to.eql(false));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Invalid registration",
+          "request": {
+            "method": "POST",
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/auth/register",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "auth", "register"]
+            },
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"email\":\"invalid\",\"password\":\"short\"}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Expected denial', () => pm.response.to.have.status(400));",
+                  "pm.test('Safe error envelope', () => pm.expect(pm.response.json().success).to.eql(false));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Invalid login",
+          "request": {
+            "method": "POST",
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/auth/login",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "auth", "login"]
+            },
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"email\":\"absent@example.com\",\"password\":\"wrong\"}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Expected denial', () => pm.response.to.have.status(401));",
+                  "pm.test('Safe error envelope', () => pm.expect(pm.response.json().success).to.eql(false));"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

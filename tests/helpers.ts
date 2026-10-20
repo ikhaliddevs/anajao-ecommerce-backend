@@ -8,7 +8,12 @@ export const testEnv: AppEnv = {
   logLevel: "silent",
   corsOrigins: ["http://localhost:3000"],
   rateLimitWindowMs: 60000,
-  rateLimitMax: 1000
+  rateLimitMax: 1000,
+  authSecret: "test-only-secret-".repeat(5),
+  mfaEncryptionKey: "ab".repeat(32),
+  accessTtlSeconds: 600,
+  refreshTtlSeconds: 604800,
+  loginLimit: 100
 };
 
 export const createMockDatabase = (ready = true): DatabaseClient => ({

@@ -9,7 +9,7 @@ This repository contains the backend foundation for the KAM VOGUE Anajao ecommer
 - `src/config` owns environment and OpenAPI configuration.
 - `src/common` owns shared errors, middleware, utilities, and common types.
 - `src/database` owns database client abstractions.
-- `src/modules` owns feature modules. Milestone 1 includes only the health module.
+- `src/modules` owns feature modules: health and Milestone 2 identity/account access.
 - `prisma` owns schema and migrations.
 - `tests` owns unit and integration tests.
 
@@ -47,11 +47,17 @@ This repository contains the backend foundation for the KAM VOGUE Anajao ecommer
 - Redact authorization headers and database URLs from logs.
 - Keep CORS origins explicit and environment-driven.
 - Use rate limiting on public routes.
+- Identity uses bearer JWTs with database-backed rotating refresh families. Never accept role or status fields from customer input.
+- Privileged actions require current ADMIN role and confirmed MFA in an MFA-authenticated session; recheck inside the transaction that performs the action.
+- Store only digests of refresh/challenge tokens. MFA secrets use AES-256-GCM with the independent MFA_ENCRYPTION_KEY.
+- Do not log request URLs/bodies, raw driver exceptions, passwords, hashes, verification secrets or tokens.
+- Email/SMS delivery is an injectable preparation boundary; social login remains unavailable pending a verified integration. Never expose test delivery sinks through HTTP.
 
 ## Testing Requirements
 
 - Unit tests should mock database dependencies where possible.
 - Integration tests must use isolated databases.
+- Set TEST_DATABASE_URL to a dedicated database ending in `_test`. Integration tests must never fall back to DATABASE_URL. CI sets both URLs to its isolated MariaDB service.
 - Do not claim tests passed unless they were executed successfully.
 - Required checks: typecheck, lint, format check, unit tests, integration tests where configured, and build.
 
@@ -61,6 +67,7 @@ This repository contains the backend foundation for the KAM VOGUE Anajao ecommer
 - `develop` is the integration branch.
 - Feature work branches from `develop`.
 - Milestone 1 branch: `feature/milestone-01-backend-foundation`.
+- Milestone 2 branch: `feature/milestone-02-identity-access`.
 - Never force-push or overwrite remote history without explicit approval.
 - Pull requests target `develop`.
 
@@ -79,12 +86,16 @@ This repository contains the backend foundation for the KAM VOGUE Anajao ecommer
 
 ## Current Milestone Status
 
-Milestone 1 implementation is locally verified, committed, and pushed to `feature/milestone-01-backend-foundation`. Pull request creation is pending because the local shell does not have GitHub CLI installed. Use the compare URL in `docs/pull-request-milestone-01.md`.
+Milestone 1 was merged through PR #1 into main (`04b51a8`). With owner approval, develop was fast-forwarded to that baseline before Milestone 2. The confirmed repository is `ikhaliddevs/anajao-ecommerce-backend` (the prompt library's example owner is superseded).
+
+Milestone 2 identity/account implementation is pushed on `feature/milestone-02-identity-access`; [PR #2](https://github.com/ikhaliddevs/anajao-ecommerce-backend/pull/2) is open against develop and must remain unmerged pending owner review. See `docs/milestones/milestone-02-summary.md`, `docs/milestones/milestone-02-test-report.md` and `docs/pull-request-milestone-02.md` for actual verification and PR status. Live delivery/social integration and manual privacy fulfillment are explicitly documented boundaries, not live services. Wait for owner review and explicit approval before starting Milestone 3.
+
+Current commands: `npm ci`, `npm run db:generate`, `npm run db:deploy`, `npm run typecheck`, `npm run lint`, `npm run format:check`, `npm run test:unit`, `npm run test:integration`, `npm run build`, `npm run docs:generate`, `npm run docs:validate`, `npm run test:smoke`, `npm audit --audit-level=high`. Build before docs:validate/test:smoke; smoke also requires TEST_DATABASE_URL. Start the built application with `npm start` (`dist/src/server.js`). Runtime secrets are documented in `docs/identity-access.md`.
 
 ## Instructions For Future Codex Sessions
 
 - Read this file and `docs/setup.md` before implementation.
-- Preserve Milestone 1 scope boundaries unless the user explicitly approves the next milestone.
+- Preserve Milestone 2 scope boundaries; do not begin Milestone 3 without owner approval. The next prompt is `docs/prompts/milestone-03-catalog-inventory.md`.
 - Use `npm.cmd` on Windows PowerShell if `npm.ps1` is blocked by execution policy.
 - Prefer `rg` for searching.
 - Use `apply_patch` for manual file edits.
