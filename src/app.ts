@@ -17,10 +17,8 @@ import { createApiRouter } from "./routes/index.js";
 import { IdentityRepository } from "./modules/identity/identity.repository.js";
 import { IdentityService } from "./modules/identity/identity.service.js";
 import { createIdentityRouter } from "./modules/identity/identity.routes.js";
-import {
-  unavailableDelivery,
-  type ChallengeDelivery
-} from "./modules/identity/identity.providers.js";
+import type { ChallengeDelivery } from "./modules/identity/identity.providers.js";
+import { createEmailDelivery } from "./modules/identity/gmail-delivery.js";
 
 export type AppDependencies = {
   env?: AppEnv;
@@ -41,7 +39,7 @@ export const createApp = (dependencies: AppDependencies = {}) => {
       ? new IdentityService(
           new IdentityRepository(database.prisma),
           env,
-          dependencies.challengeDelivery ?? unavailableDelivery
+          dependencies.challengeDelivery ?? createEmailDelivery(env)
         )
       : undefined);
   const app = express();
