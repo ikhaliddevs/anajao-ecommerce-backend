@@ -19,6 +19,8 @@ export const createLogger = (env: AppEnv) =>
         "secret",
         "AUTH_SECRET",
         "MFA_ENCRYPTION_KEY",
+        "GMAIL_APP_PASSWORD",
+        "gmail.appPassword",
         "DATABASE_URL",
         "databaseUrl"
       ],
