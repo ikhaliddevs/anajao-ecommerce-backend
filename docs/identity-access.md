@@ -12,7 +12,25 @@ No auth cookies are set or accepted. CORS allows explicit environment origins wi
 
 ## Delivery and social provider boundaries
 
-The shipped composition root uses `unavailableDelivery`. There are no live email/SMS integrations. Registration creates a pending customer and returns the same 202 envelope for duplicates. Invoke resend-verification to request delivery. Pending accounts cannot log in. Supply a verified `ChallengeDelivery` implementation via `createApp({ challengeDelivery })` to activate email/phone verification and password recovery. Integration tests inject an in-memory sink; it is never exposed as a public endpoint.
+Delivery defaults to disabled. Set `EMAIL_PROVIDER=gmail` with the credentials below to enable Gmail SMTP email verification and password recovery. SMS remains unavailable. Registration creates a pending customer and returns the same 202 envelope for duplicates. Invoke resend-verification to request delivery. Pending accounts cannot log in. Tests can override delivery via `createApp({ challengeDelivery })`; the in-memory test sink is never exposed as a public endpoint.
+
+### Gmail SMTP setup
+
+Enable Google 2-Step Verification and create a dedicated [app password](https://support.google.com/accounts/answer/185833). Use that app password, not your normal Google password. Some managed accounts or security configurations do not permit app passwords.
+
+Add these values to your local, ignored `.env` and restart the server:
+
+```dotenv
+EMAIL_PROVIDER=gmail
+GMAIL_USER=your-account@gmail.com
+GMAIL_APP_PASSWORD=your-16-letter-app-password
+```
+
+Replace the example values; spaces in Google's displayed app password are removed automatically. The sender is the authenticated Gmail account. The adapter uses `smtp.gmail.com:465` with TLS certificate verification, disabled SMTP logging, and a six-second delivery deadline within the existing ten-second transaction. No credentials or raw provider errors are logged. Phone verification still requires a separate SMS adapter. See [Nodemailer's SMTP configuration](https://nodemailer.com/smtp).
+
+To test in Postman, register your receiving email address, then POST `/api/v1/auth/email/resend-verification` with `{"email":"your-receiving-address@example.com"}`. Copy the token from the received email into `challengeToken`, then POST `/api/v1/auth/email/verify` with `{"token":"{{challengeToken}}"}`. You can now log in. Registration itself does not send mail. Password recovery uses `/api/v1/auth/password/forgot` and sends a separate reset token.
+
+A `202` response remains a generic acknowledgment, not proof of delivery. Check your inbox/spam folder and local credentials if no email arrives. SMTP can finish after the application deadline, or accept a message before a later transaction failure; such emails contain unusable tokens because the challenge was rolled back. Request a fresh token in that case. Automated tests mock SMTP; actual Gmail authentication and inbox delivery must be checked with your configured account. Do not share or commit app passwords. Gmail acceptance does not guarantee inbox placement, and Gmail account sending limits still apply.
 
 The provider receives a destination, challenge kind, raw secret and expiry. It must keep secrets out of logs, use bounded delivery timeouts (within the 10-second transaction budget) and send via a verified service. Only a SHA-256 digest is stored. The database transaction invalidates previous challenges of the same kind, creates the new one and calls the provider before committing. Delivery failures roll back and return the same generic 202 response as unknown accounts. A provider may send a message before a later commit failure; clients must be able to request a fresh challenge. A transactional encrypted outbox with retries is future work before live delivery at scale.
 

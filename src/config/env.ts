@@ -18,7 +18,14 @@ const rawEnvSchema = z.object({
     .optional(),
   AUTH_ACCESS_TTL_SECONDS: z.coerce.number().int().min(60).max(900).default(600),
   AUTH_REFRESH_TTL_SECONDS: z.coerce.number().int().min(3600).max(2592000).default(604800),
-  AUTH_LOGIN_LIMIT: z.coerce.number().int().positive().max(100).default(10)
+  AUTH_LOGIN_LIMIT: z.coerce.number().int().positive().max(100).default(10),
+  EMAIL_PROVIDER: z.enum(["disabled", "gmail"]).default("disabled"),
+  GMAIL_USER: z.string().trim().email().optional(),
+  GMAIL_APP_PASSWORD: z
+    .string()
+    .transform((value) => value.replace(/\s/g, ""))
+    .pipe(z.string().regex(/^[a-zA-Z]{16}$/))
+    .optional()
 });
 
 export type AppEnv = {
@@ -34,6 +41,7 @@ export type AppEnv = {
   accessTtlSeconds: number;
   refreshTtlSeconds: number;
   loginLimit: number;
+  gmail?: { user: string; appPassword: string };
 };
 
 export class EnvValidationError extends Error {
@@ -53,6 +61,11 @@ export const loadEnv = (source: NodeJS.ProcessEnv = process.env): AppEnv => {
   }
 
   const env = parsed.data;
+  if (env.EMAIL_PROVIDER === "gmail" && (!env.GMAIL_USER || !env.GMAIL_APP_PASSWORD)) {
+    throw new EnvValidationError([
+      "GMAIL_USER and GMAIL_APP_PASSWORD are required for Gmail delivery"
+    ]);
+  }
 
   if (env.NODE_ENV !== "test" && !env.DATABASE_URL) {
     throw new EnvValidationError(["DATABASE_URL: Required outside test environment"]);
@@ -89,7 +102,11 @@ export const loadEnv = (source: NodeJS.ProcessEnv = process.env): AppEnv => {
     mfaEncryptionKey: env.MFA_ENCRYPTION_KEY ?? "ab".repeat(32),
     accessTtlSeconds: env.AUTH_ACCESS_TTL_SECONDS,
     refreshTtlSeconds: env.AUTH_REFRESH_TTL_SECONDS,
-    loginLimit: env.AUTH_LOGIN_LIMIT
+    loginLimit: env.AUTH_LOGIN_LIMIT,
+    gmail:
+      env.EMAIL_PROVIDER === "gmail"
+        ? { user: env.GMAIL_USER!, appPassword: env.GMAIL_APP_PASSWORD! }
+        : undefined
   };
 };
 
