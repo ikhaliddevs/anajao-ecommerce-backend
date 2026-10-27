@@ -10,9 +10,12 @@ const logger: Logger = {
   debug: () => undefined
 };
 
-describe.skipIf(!process.env.DATABASE_URL)("database readiness integration", () => {
+const testUrl = process.env.TEST_DATABASE_URL;
+if (testUrl && !new URL(testUrl).pathname.endsWith("_test"))
+  throw new Error("Integration database name must end in _test");
+describe.skipIf(!testUrl)("database readiness integration", () => {
   it("connects to the configured database and runs a readiness query", async () => {
-    const database = new PrismaDatabaseClient(logger);
+    const database = new PrismaDatabaseClient(logger, testUrl);
 
     await database.connect();
     await expect(database.isReady()).resolves.toBe(true);

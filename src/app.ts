@@ -14,18 +14,36 @@ import type { Logger } from "./common/types/logger.js";
 import { PrismaDatabaseClient, type DatabaseClient } from "./database/client.js";
 import { createLogger } from "./logger.js";
 import { createApiRouter } from "./routes/index.js";
+import { IdentityRepository } from "./modules/identity/identity.repository.js";
+import { IdentityService } from "./modules/identity/identity.service.js";
+import { createIdentityRouter } from "./modules/identity/identity.routes.js";
+import {
+  unavailableDelivery,
+  type ChallengeDelivery
+} from "./modules/identity/identity.providers.js";
 
 export type AppDependencies = {
   env?: AppEnv;
   logger?: Logger;
   database?: DatabaseClient;
+  identity?: IdentityService;
+  challengeDelivery?: ChallengeDelivery;
   configureRoutes?: (app: Express) => void;
 };
 
 export const createApp = (dependencies: AppDependencies = {}) => {
   const env = dependencies.env ?? config;
   const logger = dependencies.logger ?? createLogger(env);
-  const database = dependencies.database ?? new PrismaDatabaseClient(logger);
+  const database = dependencies.database ?? new PrismaDatabaseClient(logger, env.databaseUrl);
+  const identity =
+    dependencies.identity ??
+    (database instanceof PrismaDatabaseClient
+      ? new IdentityService(
+          new IdentityRepository(database.prisma),
+          env,
+          dependencies.challengeDelivery ?? unavailableDelivery
+        )
+      : undefined);
   const app = express();
 
   app.disable("x-powered-by");
@@ -35,7 +53,7 @@ export const createApp = (dependencies: AppDependencies = {}) => {
       origin: env.corsOrigins,
       methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
       allowedHeaders: ["Content-Type", "Authorization"],
-      credentials: true
+      credentials: false
     })
   );
   app.use(
@@ -49,11 +67,22 @@ export const createApp = (dependencies: AppDependencies = {}) => {
   app.use(express.json({ limit: "1mb" }));
 
   if (env.nodeEnv !== "test" && isPinoLogger(logger)) {
-    app.use(pinoHttp({ logger }));
+    app.use(
+      pinoHttp({
+        logger,
+        serializers: {
+          req: (req: { method?: string; id?: string }) => ({ method: req.method, id: req.id })
+        }
+      })
+    );
   }
 
+  app.get("/api-docs.json", (_req, res) => {
+    res.json(openApiDocument);
+  });
   app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(openApiDocument));
   app.use("/api/v1", createApiRouter(database));
+  if (identity) app.use("/api/v1", createIdentityRouter(identity, env));
   dependencies.configureRoutes?.(app);
   app.use(notFoundHandler);
   app.use(createErrorHandler(logger));
