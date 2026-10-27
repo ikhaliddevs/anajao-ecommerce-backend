@@ -1,9 +1,10 @@
 import { identityPaths, identitySchemas } from "../modules/identity/identity.openapi.js";
+import { catalogPaths, catalogSchemas } from "../modules/catalog/catalog.openapi.js";
 export const openApiDocument = {
   openapi: "3.1.0",
   info: {
     title: "Anajao Ecommerce Backend API",
-    version: "2.0.0",
+    version: "3.0.0",
     description:
       "Identity and account foundation. Bearer access tokens; no authentication cookies. Verification and recovery delivery require an injected provider. SELLER is the vendor-ready role."
   },
@@ -15,10 +16,11 @@ export const openApiDocument = {
   ],
   components: {
     securitySchemes: { bearerAuth: { type: "http", scheme: "bearer", bearerFormat: "JWT" } },
-    schemas: identitySchemas
+    schemas: { ...identitySchemas, ...catalogSchemas }
   },
   paths: {
     ...identityPaths,
+    ...catalogPaths,
     "/api/v1/health": {
       get: {
         summary: "Application health",

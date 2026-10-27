@@ -19,12 +19,16 @@ import { IdentityService } from "./modules/identity/identity.service.js";
 import { createIdentityRouter } from "./modules/identity/identity.routes.js";
 import type { ChallengeDelivery } from "./modules/identity/identity.providers.js";
 import { createEmailDelivery } from "./modules/identity/gmail-delivery.js";
+import { CatalogRepository } from "./modules/catalog/catalog.repository.js";
+import { CatalogService } from "./modules/catalog/catalog.service.js";
+import { createCatalogRouter } from "./modules/catalog/catalog.routes.js";
 
 export type AppDependencies = {
   env?: AppEnv;
   logger?: Logger;
   database?: DatabaseClient;
   identity?: IdentityService;
+  catalog?: CatalogService;
   challengeDelivery?: ChallengeDelivery;
   configureRoutes?: (app: Express) => void;
 };
@@ -81,6 +85,12 @@ export const createApp = (dependencies: AppDependencies = {}) => {
   app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(openApiDocument));
   app.use("/api/v1", createApiRouter(database));
   if (identity) app.use("/api/v1", createIdentityRouter(identity, env));
+  const catalog =
+    dependencies.catalog ??
+    (database instanceof PrismaDatabaseClient
+      ? new CatalogService(new CatalogRepository(database.prisma))
+      : undefined);
+  if (catalog && identity) app.use("/api/v1", createCatalogRouter(catalog, identity));
   dependencies.configureRoutes?.(app);
   app.use(notFoundHandler);
   app.use(createErrorHandler(logger));
