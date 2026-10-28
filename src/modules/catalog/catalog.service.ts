@@ -97,7 +97,7 @@ export class CatalogService {
       const result = id
         ? await tx.category.update({ where: { id }, data })
         : await tx.category.create({ data });
-      await audit(tx, principal, "CATEGORY_SAVED");
+      await audit(tx, principal, `CATEGORY_SAVED:${result.id}`);
       return result;
     });
   }
@@ -109,7 +109,7 @@ export class CatalogService {
       )
         throw conflict("Category is in use");
       if (!(await tx.category.deleteMany({ where: { id } })).count) throw missing();
-      await audit(tx, principal, "CATEGORY_DELETED");
+      await audit(tx, principal, `CATEGORY_DELETED:${id}`);
       return { deleted: true };
     });
   }
@@ -145,7 +145,7 @@ export class CatalogService {
         await tx.productImage.createMany({
           data: images.map((image, position) => ({ ...image, position, productId: result.id }))
         });
-      await audit(tx, principal, "PRODUCT_SAVED");
+      await audit(tx, principal, `PRODUCT_SAVED:${result.id}`);
       return tx.product.findUniqueOrThrow({ where: { id: result.id }, include: productInclude });
     });
   }
@@ -176,7 +176,7 @@ export class CatalogService {
         await tx.priceTier.createMany({
           data: tiers.map((tier) => ({ ...tier, variantId: result.id }))
         });
-      await audit(tx, principal, "VARIANT_SAVED");
+      await audit(tx, principal, `VARIANT_SAVED:${result.id}`);
       return tx.productVariant.findUniqueOrThrow({
         where: { id: result.id },
         include: { tiers: true }
@@ -212,7 +212,7 @@ export class CatalogService {
       const result = await tx.stockAdjustment.create({
         data: { ...data, variantId, actorId: principal.userId, resultingStock: stock }
       });
-      await audit(tx, principal, "STOCK_ADJUSTED");
+      await audit(tx, principal, `STOCK_ADJUSTED:${result.id}`);
       return result;
     });
   }
@@ -234,7 +234,11 @@ export class CatalogService {
     return this.repo.transaction(principal, true, async (tx) => {
       if (!(await tx.user.findUnique({ where: { id: userId } }))) throw missing();
       await tx.user.update({ where: { id: userId }, data: { wholesaleApproved: approved } });
-      await audit(tx, principal, approved ? "WHOLESALE_APPROVED" : "WHOLESALE_REVOKED");
+      await audit(
+        tx,
+        principal,
+        `${approved ? "WHOLESALE_APPROVED" : "WHOLESALE_REVOKED"}:${userId}`
+      );
       // Target gets an audit record too, so approval history identifies the affected account.
       if (userId !== principal.userId)
         await tx.auditEvent.create({
@@ -345,14 +349,14 @@ export class CatalogService {
         create: { ...key, ...data },
         update: { ...data, status: "PENDING" }
       });
-      await audit(tx, principal, "REVIEW_SUBMITTED");
+      await audit(tx, principal, `REVIEW_SUBMITTED:${result.id}`);
       return result;
     });
   }
   deleteReview(principal: Principal, productId: string) {
     return this.repo.transaction(principal, false, async (tx) => {
       await tx.productReview.deleteMany({ where: { userId: principal.userId, productId } });
-      await audit(tx, principal, "REVIEW_DELETED");
+      await audit(tx, principal, `REVIEW_DELETED:${productId}`);
       return { deleted: true };
     });
   }
@@ -369,7 +373,7 @@ export class CatalogService {
     return this.repo.transaction(principal, true, async (tx) => {
       if (!(await tx.productReview.findUnique({ where: { id } }))) throw missing();
       const result = await tx.productReview.update({ where: { id }, data: { status } });
-      await audit(tx, principal, "REVIEW_MODERATED");
+      await audit(tx, principal, `REVIEW_MODERATED:${id}`);
       return result;
     });
   }
@@ -398,7 +402,7 @@ export class CatalogService {
       const result = id
         ? await tx.cmsContent.update({ where: { id }, data })
         : await tx.cmsContent.create({ data });
-      await audit(tx, principal, "CMS_SAVED");
+      await audit(tx, principal, `CMS_SAVED:${result.id}`);
       return result;
     });
   }

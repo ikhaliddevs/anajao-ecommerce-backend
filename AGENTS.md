@@ -9,7 +9,7 @@ This repository contains the backend foundation for the KAM VOGUE Anajao ecommer
 - `src/config` owns environment and OpenAPI configuration.
 - `src/common` owns shared errors, middleware, utilities, and common types.
 - `src/database` owns database client abstractions.
-- `src/modules` owns feature modules: health and Milestone 2 identity/account access.
+- `src/modules` owns feature modules: health, identity/account access, and catalogue/inventory.
 - `prisma` owns schema and migrations.
 - `tests` owns unit and integration tests.
 
@@ -51,7 +51,10 @@ This repository contains the backend foundation for the KAM VOGUE Anajao ecommer
 - Privileged actions require current ADMIN role and confirmed MFA in an MFA-authenticated session; recheck inside the transaction that performs the action.
 - Store only digests of refresh/challenge tokens. MFA secrets use AES-256-GCM with the independent MFA_ENCRYPTION_KEY.
 - Do not log request URLs/bodies, raw driver exceptions, passwords, hashes, verification secrets or tokens.
-- Email/SMS delivery is an injectable preparation boundary; social login remains unavailable pending a verified integration. Never expose test delivery sinks through HTTP.
+- Gmail SMTP email delivery is opt-in and injectable; SMS/social login remain unavailable pending verified integrations. Never expose test delivery sinks through HTTP.
+- Catalogue admin operations must recheck account/session/current ADMIN role and confirmed MFA inside their database transaction. Catalogue lock order is account then singleton catalogue lock; use READ COMMITTED to avoid stale snapshots after waiting.
+- Wholesale tiers are available only to administrator-approved accounts. Public DTOs must exclude tiers, digital asset keys and review author identities. Stock must never become negative; adjustments/imports require idempotency keys. Quotes do not reserve stock.
+- Catalogue money is integer minor units with an explicit currency. M4 must revalidate price, current wholesale eligibility and availability during checkout; do not treat quotes as reservations. CSV imports are bounded, create-only and transactional; preserve formula-injection protection.
 
 ## Testing Requirements
 
@@ -68,6 +71,7 @@ This repository contains the backend foundation for the KAM VOGUE Anajao ecommer
 - Feature work branches from `develop`.
 - Milestone 1 branch: `feature/milestone-01-backend-foundation`.
 - Milestone 2 branch: `feature/milestone-02-identity-access`.
+- Milestone 3 branch: `feature/milestone-03-catalog-inventory`.
 - Never force-push or overwrite remote history without explicit approval.
 - Pull requests target `develop`.
 
@@ -88,14 +92,17 @@ This repository contains the backend foundation for the KAM VOGUE Anajao ecommer
 
 Milestone 1 was merged through PR #1 into main (`04b51a8`). With owner approval, develop was fast-forwarded to that baseline before Milestone 2. The confirmed repository is `ikhaliddevs/anajao-ecommerce-backend` (the prompt library's example owner is superseded).
 
-Milestone 2 identity/account implementation is pushed on `feature/milestone-02-identity-access`; [PR #2](https://github.com/ikhaliddevs/anajao-ecommerce-backend/pull/2) is open against develop and must remain unmerged pending owner review. See `docs/milestones/milestone-02-summary.md`, `docs/milestones/milestone-02-test-report.md` and `docs/pull-request-milestone-02.md` for actual verification and PR status. Live delivery/social integration and manual privacy fulfillment are explicitly documented boundaries, not live services. Wait for owner review and explicit approval before starting Milestone 3.
+The owner approved Milestone 2 and authorized Milestone 3. Fetch verified M2 and the Gmail/security follow-up merged into develop at `1cf28c3` through PR #6 on 2026-10-27; the M3 feature branch starts there. Earlier M2 reports remain historical execution records. Gmail SMTP is now available when configured; SMS/social integration and manual privacy fulfillment remain documented boundaries.
+
+Milestone 3 catalogue/inventory implementation and isolated verification are recorded in `docs/milestones/milestone-03-summary.md` and `docs/milestones/milestone-03-test-report.md`. Review handoff/PR status is in `docs/pull-request-milestone-03.md`. Wholesale approval is restricted to approved accounts by owner decision. M3 must remain unmerged pending owner review. Do not begin Milestone 4 without explicit approval.
 
 Current commands: `npm ci`, `npm run db:generate`, `npm run db:deploy`, `npm run typecheck`, `npm run lint`, `npm run format:check`, `npm run test:unit`, `npm run test:integration`, `npm run build`, `npm run docs:generate`, `npm run docs:validate`, `npm run test:smoke`, `npm audit --audit-level=high`. Build before docs:validate/test:smoke; smoke also requires TEST_DATABASE_URL. Start the built application with `npm start` (`dist/src/server.js`). Runtime secrets are documented in `docs/identity-access.md`.
 
 ## Instructions For Future Codex Sessions
 
 - Read this file and `docs/setup.md` before implementation.
-- Preserve Milestone 2 scope boundaries; do not begin Milestone 3 without owner approval. The next prompt is `docs/prompts/milestone-03-catalog-inventory.md`.
+- Preserve Milestone 3 boundaries: no checkout/orders/payment processing, digital entitlement delivery, marketplace permissions, or live media storage. The next prompt is `docs/prompts/milestone-04-commerce-payments.md`; wait for owner approval.
+- Read `docs/catalog-inventory.md` for catalogue contracts, import policies and Postman order. `docs:generate` now regenerates and formats M2/M3 Postman artifacts and OpenAPI; `docs:validate` validates both collections.
 - Use `npm.cmd` on Windows PowerShell if `npm.ps1` is blocked by execution policy.
 - Prefer `rg` for searching.
 - Use `apply_patch` for manual file edits.
