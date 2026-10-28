@@ -34,4 +34,4 @@ Artifacts: `docs/catalog-inventory.md`, both M3 milestone reports, `postman/anaj
 
 ## Release status
 
-Feature branch: `feature/milestone-03-catalog-inventory`; base: `develop`. Implementation commit: `5ca90df`. Push/PR verification is pending; this document does not yet claim a remote PR or CI pass. Never auto-merge.
+Feature branch: `feature/milestone-03-catalog-inventory`; base: `develop`. Implementation commit: `5ca90df`; verification/artifact commit: `bb2cd2e`. Branch pushed and [PR #7](https://github.com/ikhaliddevs/anajao-ecommerce-backend/pull/7) verified open against develop, unmerged, on 2026-10-28. The first push timed out before authentication; the retry succeeded. gh was unavailable, so the existing credential-safe GitHub API helper created and read back the PR. Hosted check results must be verified on the current PR head separately from the local results above. Never auto-merge.
