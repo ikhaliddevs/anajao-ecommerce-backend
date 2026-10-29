@@ -4,7 +4,16 @@ import { spawnSync } from "node:child_process";
 // Owner-authorized PR creation only. Credentials stay in memory and never enter
 // command arguments, files, stdout, error messages or the PR body.
 const repository = "ikhaliddevs/anajao-ecommerce-backend";
-const head = "feature/milestone-02-identity-access";
+const milestone = process.argv.includes("--milestone=03") ? "03" : "02";
+const head =
+  milestone === "03"
+    ? "feature/milestone-03-catalog-inventory"
+    : "feature/milestone-02-identity-access";
+const descriptionPath = `docs/pull-request-milestone-${milestone}.md`;
+const title =
+  milestone === "03"
+    ? "feat: catalogue, inventory and approved wholesale pricing"
+    : "feat: Milestone 2 identity, authentication and access control";
 let token = process.env.ANAJAO_GITHUB_TOKEN;
 if (!token) {
   const credential = spawnSync("git", ["credential", "fill"], {
@@ -52,17 +61,17 @@ const existing = (await api(
 const pull =
   existing[0] ??
   ((await api("/pulls", "POST", {
-    title: "feat: Milestone 2 identity, authentication and access control",
+    title,
     head,
     base: "develop",
-    body: readFileSync("docs/pull-request-milestone-02.md", "utf8")
+    body: readFileSync(descriptionPath, "utf8")
   })) as Pull);
 const verified = (await api(`/pulls/${pull.number}`)) as Pull;
 if (verified.base.ref !== "develop" || verified.merged) throw new Error("Unexpected PR state");
 console.log(`PR #${verified.number}: ${verified.html_url} (base: develop, merged: false)`);
 if (process.argv.includes("--update-body")) {
   await api(`/pulls/${pull.number}`, "PATCH", {
-    body: readFileSync("docs/pull-request-milestone-02.md", "utf8")
+    body: readFileSync(descriptionPath, "utf8")
   });
   console.log("PR description updated from the committed handoff document");
 }

@@ -74,6 +74,11 @@ jobs:
       - name: Validate API artifacts
         run: npm run docs:validate
 
+      - name: Verify generated API artifacts are current
+        run: |
+          npm run docs:generate
+          git diff --exit-code -- docs/openapi.json postman
+
       - name: Built server smoke test
         run: npm run test:smoke
 

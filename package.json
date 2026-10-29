@@ -12,7 +12,7 @@
     "lint": "eslint .",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
-    "docs:generate": "tsx scripts/generate-postman.ts",
+    "docs:generate": "tsx scripts/generate-postman.ts && tsx scripts/generate-catalog-postman.ts && prettier --write docs/openapi.json postman/*.json",
     "docs:validate": "node dist/scripts/validate-api-artifacts.js",
     "test:smoke": "node dist/scripts/smoke-built.js",
     "test": "vitest run",
