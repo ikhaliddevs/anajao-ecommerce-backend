@@ -52,7 +52,11 @@ try {
     ["/api/v1/ready", 200],
     ["/api-docs/", 200],
     ["/api-docs.json", 200],
-    ["/api/v1/me", 401]
+    ["/api/v1/me", 401],
+    ["/api/v1/catalog/products", 200],
+    ["/api/v1/catalog/categories", 200],
+    ["/api/v1/content", 200],
+    ["/api/v1/admin/catalog/products", 401]
   ] as const) {
     const response = await fetch(`${base}${path}`);
     if (response.status !== status)
